@@ -9,16 +9,17 @@ namespace Diviner.CameraController
         [Header("Camera Target Settings")]
         public Transform Target;
 
-        [Space]
-        public bool TargetIsPlayer;
+        [Header("Camera Direction")]
+        public bool LookAtTarget = false;
 
         [Space]
-        public Transform CameraObject;
+        public Vector3 CameraDirection;
 
         [Header("Camera Zoom Settings")]
         public bool CameraCanZoom = true;
 
         [Space]
+        [Range(0, 1)]
         public float ZoomSpeed;
 
         [Space]
@@ -27,38 +28,35 @@ namespace Diviner.CameraController
         [Header("Camera Offset Settings")]
         public Vector3 PositionOffset;
 
-        [Space]
-        public Quaternion RotationOffset;
-
         [Header("Camera Movement Settings")]
         [Range(0, 1)]
         public float CameraSpeed;
 
-        private void Start()
+        private Transform CameraObject => transform.GetChild(0);
+
+        private void FixedUpdate()
         {
-            if (Target == null && TargetIsPlayer)
+            if (Target == null)
             {
-                Target = GameObject.FindGameObjectWithTag("Player").transform;
-            }
-            else if (Target == null && !TargetIsPlayer)
-            {
-                Debug.LogError("Camera Has No Target");
+                Debug.LogError("Camera has no target");
+
+                return;
             }
 
-            SetupStartingPosition();
-        }
-
-        private void LateUpdate()
-        {
             if (CameraCanZoom)
             {
                 UpdateZoom();
             }
 
-            FollowPlayer();
+            UpdateCameraPosition();
+            UpdateCameraOffset();
 
-            UpdateCameraRotation();
+            UpdateCameraDirection();
         }
+
+        #region Zoom
+
+        //TODO: Clean up method
 
         private void UpdateZoom()
         {
@@ -77,19 +75,36 @@ namespace Diviner.CameraController
             CameraObject.position += CameraObject.forward * scrollInput * ZoomSpeed;
         }
 
-        private void FollowPlayer()
+        #endregion
+
+        #region Follow Player
+
+        private void UpdateCameraPosition()
         {
             transform.position = Vector3.Lerp(transform.position, Target.position, CameraSpeed);
         }
 
-        private void SetupStartingPosition()
+        private void UpdateCameraOffset()
         {
-            CameraObject.position = PositionOffset;
+            CameraObject.position = transform.position + PositionOffset;
         }
 
-        private void UpdateCameraRotation()
+        #endregion
+
+        #region Camera Direction
+
+        private void UpdateCameraDirection()
         {
-            transform.rotation = RotationOffset;
+            if (LookAtTarget)
+            {
+                CameraObject.LookAt(Target);
+            }
+            else
+            {
+                CameraObject.rotation = Quaternion.Euler(CameraDirection.x, CameraDirection.y, CameraDirection.z);
+            }
         }
+
+        #endregion
     }
 }
