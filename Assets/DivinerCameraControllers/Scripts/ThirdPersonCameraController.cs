@@ -6,35 +6,36 @@ namespace Diviner.CameraController
 {
     public class ThirdPersonCameraController : MonoBehaviour
     {
-        [Header("Camera Target Settings")]
-        public Transform Target;
-
-        [Header("Camera Direction")]
-        public bool LookAtTarget = false;
-
-        [Space]
-        public Vector3 CameraDirection;
-
         [Header("Camera Zoom Settings")]
         public bool CameraCanZoom = true;
 
         [Space]
-        [Range(0, 1)]
-        public float ZoomSpeed;
-
-        [Space]
-        public Vector2 ZoomDistanceMinMax = new Vector2(5, 30);
-
-        [Header("Camera Offset Settings")]
-        public Vector3 PositionOffset;
+        public Vector3 CameraDirection;
 
         [Header("Camera Movement Settings")]
         [Range(0, 1)]
         public float CameraSpeed;
 
-        private Transform CameraObject => transform.GetChild(0);
+        [Header("Camera Direction")]
+        public bool LookAtTarget = false;
 
-        private void FixedUpdate()
+        [Header("Camera Offset Settings")]
+        public Vector3 PositionOffset;
+
+        [Header("Camera Target Settings")]
+        public Transform Target;
+
+        [Space]
+        public Vector2 ZoomDistanceMinMax = new Vector2(5, 30);
+
+        [Space]
+        [Range(0, 1)]
+        public float ZoomSpeed;
+
+        private Transform CameraObject => transform.GetChild(0);
+        private Camera MainCamera => CameraObject.GetComponent<Camera>();
+
+        private void LateUpdate()
         {
             if (Target == null)
             {
@@ -45,20 +46,31 @@ namespace Diviner.CameraController
 
             if (CameraCanZoom)
             {
-                UpdateZoom();
+                if (MainCamera.orthographic)
+                {
+                    UpdateOrthographicZoom();
+                }
+                else
+                {
+                    UpdatePerspectiveZoom();
+                }
             }
 
             UpdateCameraPosition();
-            UpdateCameraOffset();
 
             UpdateCameraDirection();
         }
 
+        private void Start()
+        {
+            UpdateCameraOffset();
+        }
+
         #region Zoom
 
-        //TODO: Clean up method
+        //TODO: Fix duplication and refactor methods
 
-        private void UpdateZoom()
+        private void UpdatePerspectiveZoom()
         {
             float scrollInput = Input.GetAxis("Mouse ScrollWheel");
             float distance = Vector3.Distance(Target.position, CameraObject.position);
@@ -75,21 +87,37 @@ namespace Diviner.CameraController
             CameraObject.position += CameraObject.forward * scrollInput * ZoomSpeed;
         }
 
-        #endregion
+        private void UpdateOrthographicZoom()
+        {
+            float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+
+            if (MainCamera.orthographicSize <= ZoomDistanceMinMax.x && scrollInput > 0)
+            {
+                return;
+            }
+            else if (MainCamera.orthographicSize >= ZoomDistanceMinMax.y && scrollInput < 0)
+            {
+                return;
+            }
+
+            MainCamera.orthographicSize += scrollInput * ZoomSpeed;
+        }
+
+        #endregion Zoom
 
         #region Follow Player
-
-        private void UpdateCameraPosition()
-        {
-            transform.position = Vector3.Lerp(transform.position, Target.position, CameraSpeed);
-        }
 
         private void UpdateCameraOffset()
         {
             CameraObject.position = transform.position + PositionOffset;
         }
 
-        #endregion
+        private void UpdateCameraPosition()
+        {
+            transform.position = Vector3.Lerp(transform.position, Target.position, CameraSpeed);
+        }
+
+        #endregion Follow Player
 
         #region Camera Direction
 
@@ -105,6 +133,6 @@ namespace Diviner.CameraController
             }
         }
 
-        #endregion
+        #endregion Camera Direction
     }
 }

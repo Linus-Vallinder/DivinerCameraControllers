@@ -405,6 +405,14 @@ PrefabInstance:
       propertyPath: Target
       value: 
       objectReference: {fileID: 1147749588}
+    - target: {fileID: 1456168902739570607, guid: d7a18dd7573cad040bee6b688d1221db, type: 3}
+      propertyPath: PositionOffset.z
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1456168902739570607, guid: d7a18dd7573cad040bee6b688d1221db, type: 3}
+      propertyPath: CameraDirection.x
+      value: 45
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d7a18dd7573cad040bee6b688d1221db, type: 3}
 --- !u!1001 &8592612048416754618
